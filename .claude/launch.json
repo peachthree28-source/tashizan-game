@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tashizan-game",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "${PORT}"],
+      "port": 8765,
+      "autoPort": true,
+      "cwd": "/Users/momo/Documents/claude-work/tashizan-game"
+    }
+  ]
+}
