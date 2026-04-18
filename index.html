@@ -158,6 +158,23 @@
     }
     .back-btn:active { background: #f3f4f6; }
 
+    /* ── モード完了パネル ── */
+    .mode-done {
+      flex-direction: column; align-items: center;
+      gap: 14px; width: 100%;
+      animation: pop-in 0.45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .mode-done-msg {
+      font-size: 1.45rem; font-weight: bold; color: #1e40af; text-align: center;
+    }
+    .sub-btn {
+      background: none; border: 2.5px solid #9ca3af;
+      border-radius: 40px; padding: 11px 30px;
+      font-size: 1.1rem; font-weight: bold; color: #6b7280; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .sub-btn:active { background: #f3f4f6; }
+
     /* ── QUIZ CHOICES ── */
     .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 400px; }
     .cbtn {
@@ -435,7 +452,12 @@
     <div id="d-track"></div>
   </div>
   <div class="msg hint" id="d-msg">みてみよう！</div>
-  <button class="big-btn" id="d-next" onclick="startDemo()" style="display:none">つぎの もんだい ▶</button>
+  <button class="big-btn" id="d-next" onclick="runDemoQ()" style="display:none">つぎの もんだい ▶</button>
+  <div class="mode-done" id="d-complete" style="display:none">
+    <div class="mode-done-msg">２もん みたよ！🎉</div>
+    <button class="big-btn green" onclick="startQuiz()">クイズへ　▶</button>
+    <button class="sub-btn" onclick="startDemo()">もういちど</button>
+  </div>
   <button class="back-btn" onclick="goMenu()">← もどる</button>
 </div>
 
@@ -452,6 +474,11 @@
   </div>
   <div class="msg hint" id="p-msg">ジャンプさせてみよう！</div>
   <button class="big-btn green" id="p-btn" onclick="practiceJump()">🐸 ジャンプ！</button>
+  <div class="mode-done" id="p-complete" style="display:none">
+    <div class="mode-done-msg">３もん できたよ！🎉</div>
+    <button class="big-btn green" onclick="startQuiz()">クイズへ　▶</button>
+    <button class="sub-btn" onclick="startPractice()">もういちど</button>
+  </div>
   <button class="back-btn" onclick="goMenu()">← もどる</button>
 </div>
 
@@ -733,14 +760,26 @@ function goalCellPos(trackId) {
 /* ═══════════════════════════════
    DEMO MODE
 ═══════════════════════════════ */
+const DEMO_MAX     = 2;
+const PRACTICE_MAX = 3;
+let demoCount = 0;
+let practiceCount = 0;
+
 function startDemo() {
+  demoCount = 0;
+  runDemoQ();
+}
+
+function runDemoQ() {
+  demoCount++;
   gStart=randStart(); gAnimating=false;
   showScreen('demoScreen');
-  document.getElementById('d-n1').textContent='d-ans'&&(document.getElementById('d-n1').textContent=gStart);
+  document.getElementById('d-n1').textContent=gStart;
   document.getElementById('d-ans').textContent='？';
-  document.getElementById('d-msg').textContent='みてみよう！';
+  document.getElementById('d-msg').textContent=`${demoCount} もんめ！みてみよう`;
   document.getElementById('d-msg').className='msg hint';
   document.getElementById('d-next').style.display='none';
+  document.getElementById('d-complete').style.display='none';
   buildTrack('d-track',true);
   afterLayout(()=>{
     placeChar('d-char','d-track');
@@ -752,7 +791,11 @@ function startDemo() {
         document.getElementById('d-ans').textContent=ans;
         document.getElementById('d-msg').textContent=`${gStart} から 5すすんで ${ans}！`;
         document.getElementById('d-msg').className='msg praise';
-        document.getElementById('d-next').style.display='';
+        if(demoCount >= DEMO_MAX) {
+          setTimeout(()=>{ document.getElementById('d-complete').style.display='flex'; }, 700);
+        } else {
+          document.getElementById('d-next').style.display='';
+        }
       });
     },600);
   });
@@ -762,17 +805,25 @@ function startDemo() {
    PRACTICE MODE
 ═══════════════════════════════ */
 function startPractice() {
+  practiceCount = 0;
+  runPracticeQ();
+}
+
+function runPracticeQ() {
+  practiceCount++;
   gStart=randStart(); gAnimating=false;
   showScreen('practiceScreen');
   document.getElementById('p-n1').textContent=gStart;
   document.getElementById('p-ans').textContent='？';
-  document.getElementById('p-msg').textContent='ジャンプさせてみよう！';
+  document.getElementById('p-msg').textContent=`${practiceCount} もんめ！ジャンプさせてみよう`;
   document.getElementById('p-msg').className='msg hint';
+  document.getElementById('p-complete').style.display='none';
   const btn=document.getElementById('p-btn');
-  btn.textContent=gChar+' ジャンプ！'; btn.disabled=false; btn.onclick=practiceJump;
+  btn.style.display=''; btn.textContent=gChar+' ジャンプ！'; btn.disabled=false; btn.onclick=practiceJump;
   buildTrack('p-track',true);
   afterLayout(()=>placeChar('p-char','p-track'));
 }
+
 function practiceJump() {
   if(gAnimating) return; gAnimating=true;
   document.getElementById('p-btn').disabled=true;
@@ -784,8 +835,13 @@ function practiceJump() {
     document.getElementById('p-ans').textContent=ans;
     document.getElementById('p-msg').textContent=`${gStart} から 5すすんで ${ans}！`;
     document.getElementById('p-msg').className='msg praise';
-    const btn=document.getElementById('p-btn');
-    btn.textContent='つぎの もんだい ▶'; btn.disabled=false; btn.onclick=startPractice;
+    if(practiceCount >= PRACTICE_MAX) {
+      document.getElementById('p-btn').style.display='none';
+      setTimeout(()=>{ document.getElementById('p-complete').style.display='flex'; }, 700);
+    } else {
+      const btn=document.getElementById('p-btn');
+      btn.textContent='つぎの もんだい ▶'; btn.disabled=false; btn.onclick=runPracticeQ;
+    }
   });
 }
 
