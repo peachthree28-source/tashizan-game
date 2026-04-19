@@ -431,7 +431,7 @@
     </button>
     <button class="menu-btn" onclick="startQuiz()">
       <span class="micon">⭐</span>
-      <div><div class="mtitle">5もんチャレンジ</div><div class="mdesc">ぜんもんせいかいをねらおう</div></div>
+      <div><div class="mtitle">7もんチャレンジ</div><div class="mdesc">ぜんもんせいかいをねらおう</div></div>
     </button>
     <button class="menu-btn" onclick="showCollection()">
       <span class="micon">📚</span>
@@ -485,7 +485,7 @@
 <!-- ═══════ QUIZ ═══════ -->
 <div class="screen" id="quizScreen">
   <div class="stage-header">
-    <div class="stage-label">もんだい <span id="q-num">1</span> / 5</div>
+    <div class="stage-label">もんだい <span id="q-num">1</span> / 7</div>
     <div class="prog-dots" id="progDots"></div>
   </div>
   <div class="problem-card">
@@ -595,7 +595,7 @@ let gStart     = 3;
 let gAnimating = false;
 
 /* ステージ用 */
-const STAGE_SIZE = 5;
+const STAGE_SIZE = 7;
 let stageQ       = 0;   // 現在の問題インデックス (0-4)
 let stageMistakes = 0;  // このステージの誤答数
 let quizStart    = 3;
@@ -1034,19 +1034,19 @@ function handleQuizChoice(chosen, correct) {
 function showResult() {
   let stars, title, msg, sealData=null, isRare=false;
 
-  if(stageMistakes===0){
-    stars=3; title='ぜんもんせいかい！🎉';
+  if(stageMistakes<=1){
+    stars=3; title=stageMistakes===0?'ぜんもんせいかい！🎉':'すごい！ほぼパーフェクト！';
     if(Math.random()<0.25){
       isRare=true; sealData=SEALS_RARE[Math.floor(Math.random()*SEALS_RARE.length)];
-      msg='パーフェクト！ レアシールをもらったよ！✨';
+      msg='レアシールをもらったよ！✨';
     } else {
       sealData=SEALS_NORMAL[Math.floor(Math.random()*SEALS_NORMAL.length)];
-      msg='パーフェクト！ シールをもらったよ！';
+      msg='シールをもらったよ！';
     }
-  } else if(stageMistakes===1){
-    stars=2; title='おしい！あと一歩！'; msg='ミスなしでシールがもらえるよ！がんばれ！';
+  } else if(stageMistakes<=3){
+    stars=2; title='おしい！あと一歩！'; msg='ミス1かい以内でシールがもらえるよ！';
   } else {
-    stars=1; title='もう一かい チャレンジ！'; msg='ミス '+stageMistakes+' かい。ミスなしを目指そう！';
+    stars=1; title='もう一かい チャレンジ！'; msg='ミス '+stageMistakes+' かい。つぎはミスを減らそう！';
   }
 
   const newSeal = sealData && isNew(sealData.id);
