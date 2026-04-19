@@ -490,7 +490,7 @@
   </div>
   <div class="problem-card">
     <div class="problem-text">
-      <span class="n1" id="q-n1">3</span><span class="op"> ＋ </span><span class="n5">５</span><span class="eq"> ＝ </span><span class="nq" id="q-q">？</span>
+      <span class="n1" id="q-n1">3</span><span class="op"> ＋ </span><span class="n5" id="q-n5">５</span><span class="eq"> ＝ </span><span class="nq" id="q-q">？</span>
     </div>
   </div>
   <div class="track-wrapper" id="q-wrap">
@@ -550,10 +550,15 @@ const SEALS_NORMAL = [
   { id:'n8', img:'assets/seals/n8.webp', name:'おやすみかえる' },
 ];
 const SEALS_RARE = [
-  { id:'r1', img:'assets/seals/r1.webp', name:'かえるキング'    },
-  { id:'r2', img:'assets/seals/r2.webp', name:'かえるヒーロー'  },
-  { id:'r3', img:'assets/seals/r3.webp', name:'かえるドラゴン'  },
-  { id:'r4', img:'assets/seals/r4.webp', name:'かえるレインボー'},
+  { id:'r1', img:'assets/seals/r1.webp', name:'かえるキング'        },
+  { id:'r2', img:'assets/seals/r2.webp', name:'かえるヒーロー'      },
+  { id:'r3', img:'assets/seals/r3.webp', name:'かえるドラゴン'      },
+  { id:'r4', img:'assets/seals/r4.webp', name:'かえるレインボー'    },
+  { id:'r5', img:'assets/seals/r5.webp', name:'レインボーユニコーン'},
+  { id:'r6', img:'assets/seals/r6.webp', name:'まほうつかいフクロウ'},
+  { id:'r7', img:'assets/seals/r7.webp', name:'にゃんこサムライ'    },
+  { id:'r8', img:'assets/seals/r8.webp', name:'キャプテン・シャーク'},
+  { id:'r9', img:'assets/seals/r9.webp', name:'そらとぶネコひこうし'},
 ];
 
 /* ─── コレクション(localStorage) ────── */
@@ -866,8 +871,12 @@ function updateProgDots() {
   document.getElementById('q-num').textContent=stageQ+1;
 }
 
+let mixedIndices=[], currentAddend=5;
+
 function startQuiz() {
   stageQ=0; stageMistakes=0;
+  /* 5問中2問をランダムに+2〜+4の混合問題にする */
+  mixedIndices=[0,1,2,3,4].sort(()=>Math.random()-0.5).slice(0,2);
   showScreen('quizScreen');
   initProgDots();
   nextStageQ();
@@ -878,17 +887,85 @@ function nextStageQ() {
   quizStart=randStart(); gStart=quizStart;
   gAnimating=false;
   updateProgDots();
+
+  if(mixedIndices.includes(stageQ)){
+    /* まじり問題：+2〜+4 */
+    currentAddend=[2,3,4][Math.floor(Math.random()*3)];
+    runMixedQ();
+  } else {
+    /* +5問題：通常フロー */
+    currentAddend=5;
+    document.getElementById('q-n5').textContent='５';
+    document.getElementById('q-wrap').style.display='';
+    document.getElementById('q-n1').textContent=quizStart;
+    document.getElementById('q-q').textContent='？';
+    document.getElementById('q-msg').textContent='うごきを みてね…';
+    document.getElementById('q-msg').className='msg hint';
+    document.getElementById('q-choices').style.display='none';
+    document.getElementById('q-choices').innerHTML='';
+    buildTrack('q-track',true);
+    afterLayout(()=>{
+      placeChar('q-char','q-track');
+      setTimeout(()=>runQuizAnim(showQuizChoices),600);
+    });
+  }
+}
+
+/* ── まじり問題（+2〜+4） ── */
+function runMixedQ() {
+  const add=currentAddend;
+  const nums=['２','３','４'];
+  document.getElementById('q-n5').textContent=nums[add-2];
+  document.getElementById('q-wrap').style.display='none';  /* トラック非表示 */
   document.getElementById('q-n1').textContent=quizStart;
   document.getElementById('q-q').textContent='？';
-  document.getElementById('q-msg').textContent='うごきを みてね…';
+  document.getElementById('q-msg').textContent='こたえを えらんでね！';
   document.getElementById('q-msg').className='msg hint';
   document.getElementById('q-choices').style.display='none';
   document.getElementById('q-choices').innerHTML='';
-  buildTrack('q-track',true);
-  afterLayout(()=>{
-    placeChar('q-char','q-track');
-    setTimeout(()=>runQuizAnim(showQuizChoices),600);
+  setTimeout(()=>showMixedChoices(add), 350);
+}
+
+function showMixedChoices(add) {
+  const ans=quizStart+add, pool=[];
+  for(let d=-3;d<=3;d++){ if(d!==0){const c=ans+d;if(c>0&&c<=15)pool.push(c);} }
+  const choices=[ans,...pool.sort(()=>Math.random()-0.5).slice(0,3)].sort(()=>Math.random()-0.5);
+  const grid=document.getElementById('q-choices'); grid.innerHTML='';
+  choices.forEach(v=>{
+    const btn=document.createElement('button'); btn.className='cbtn pop';
+    btn.textContent=v; btn.onclick=()=>handleMixedChoice(v,ans,add); grid.appendChild(btn);
   });
+  grid.style.display='grid';
+  document.getElementById('q-msg').textContent='こたえを えらんでね！';
+}
+
+function handleMixedChoice(chosen,correct,add) {
+  document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
+  if(chosen===correct){
+    document.querySelectorAll('.cbtn').forEach(b=>{ if(+b.textContent===correct) b.classList.add('c-ok'); });
+    sndCorrectLight(); charHappy('q-char');
+    document.getElementById('q-msg').textContent=`${quizStart} ＋ ${add} ＝ ${correct}！`;
+    document.getElementById('q-msg').className='msg praise';
+    document.getElementById('q-q').textContent=correct;
+    stageQ++;
+    setTimeout(()=>{
+      document.getElementById('q-wrap').style.display='';
+      nextStageQ();
+    },1300);
+  } else {
+    stageMistakes++;
+    document.querySelectorAll('.cbtn').forEach(b=>{
+      if(+b.textContent===correct) b.classList.add('c-ok');
+      if(+b.textContent===chosen)  b.classList.add('c-bad');
+    });
+    sndWrong();
+    document.getElementById('q-msg').textContent='ちがうよ！もう一かい！';
+    setTimeout(()=>{
+      document.getElementById('q-choices').style.display='none';
+      document.getElementById('q-choices').innerHTML='';
+      setTimeout(()=>showMixedChoices(add),350);
+    },1600);
+  }
 }
 
 function runQuizAnim(onDone) {
@@ -958,13 +1035,18 @@ function showResult() {
   let stars, title, msg, sealData=null, isRare=false;
 
   if(stageMistakes===0){
-    stars=3; title='ぜんもんせいかい！🎉'; msg='パーフェクト！ レアシールをもらったよ！';
-    isRare=true; sealData=SEALS_RARE[Math.floor(Math.random()*SEALS_RARE.length)];
+    stars=3; title='ぜんもんせいかい！🎉';
+    if(Math.random()<0.25){
+      isRare=true; sealData=SEALS_RARE[Math.floor(Math.random()*SEALS_RARE.length)];
+      msg='パーフェクト！ レアシールをもらったよ！✨';
+    } else {
+      sealData=SEALS_NORMAL[Math.floor(Math.random()*SEALS_NORMAL.length)];
+      msg='パーフェクト！ シールをもらったよ！';
+    }
   } else if(stageMistakes===1){
-    stars=2; title='1かい まちがえたね'; msg='あと一歩！ シールをもらったよ！';
-    sealData=SEALS_NORMAL[Math.floor(Math.random()*SEALS_NORMAL.length)];
+    stars=2; title='おしい！あと一歩！'; msg='ミスなしでシールがもらえるよ！がんばれ！';
   } else {
-    stars=1; title='もう一かい チャレンジ！'; msg='まちがいは '+stageMistakes+' かいだったよ。つぎは０をめざそう！';
+    stars=1; title='もう一かい チャレンジ！'; msg='ミス '+stageMistakes+' かい。ミスなしを目指そう！';
   }
 
   const newSeal = sealData && isNew(sealData.id);
