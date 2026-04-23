@@ -296,12 +296,12 @@
 
     .seal-modal-content {
       position: relative;
-      width: 260px; height: 260px;
+      width: 360px; height: 360px;
       display: flex; align-items: center; justify-content: center;
     }
     /* 大きいシールカード */
     .seal-modal-card {
-      width: 180px; height: 180px; border-radius: 50%;
+      width: 240px; height: 240px; border-radius: 26px;
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; font-size: 5.5rem; position: relative; z-index: 2;
       animation: modal-card-pop 0.55s cubic-bezier(.34,1.56,.64,1) both,
@@ -690,7 +690,7 @@ function charShake(id) {
 }
 
 /* ─── TRACK BUILDER ─────────────────── */
-function buildTrack(trackId, hideGoal) {
+function buildTrack(trackId, hideGoal, hideMid=false) {
   const cont = document.getElementById(trackId); cont.innerHTML='';
   const nline = document.createElement('div'); nline.className='nline';
   const c0 = document.createElement('div'); c0.className='ncell nc-start'; c0.id=trackId+'-c0'; c0.textContent=gStart; nline.appendChild(c0);
@@ -701,12 +701,14 @@ function buildTrack(trackId, hideGoal) {
   const c5=document.createElement('div'); c5.className='ncell nc-goal'; c5.id=trackId+'-c5';
   c5.textContent=hideGoal?'?':gStart+5; if(!hideGoal) c5.classList.add('revealed'); nline.appendChild(c5);
   cont.appendChild(nline);
-  const mr=document.createElement('div');  mr.className='mid-row';
-  const sl=document.createElement('div');  sl.className='mid-spacer';
-  const inn=document.createElement('div'); inn.className='mid-inner';
-  const sr=document.createElement('div');  sr.className='mid-spacer';
-  for(let i=1;i<=4;i++){const sp=document.createElement('span');sp.className='mid-num';sp.id=trackId+'-m'+i;sp.textContent=gStart+i;inn.appendChild(sp);}
-  mr.appendChild(sl); mr.appendChild(inn); mr.appendChild(sr); cont.appendChild(mr);
+  if(!hideMid){
+    const mr=document.createElement('div');  mr.className='mid-row';
+    const sl=document.createElement('div');  sl.className='mid-spacer';
+    const inn=document.createElement('div'); inn.className='mid-inner';
+    const sr=document.createElement('div');  sr.className='mid-spacer';
+    for(let i=1;i<=4;i++){const sp=document.createElement('span');sp.className='mid-num';sp.id=trackId+'-m'+i;sp.textContent=gStart+i;inn.appendChild(sp);}
+    mr.appendChild(sl); mr.appendChild(inn); mr.appendChild(sr); cont.appendChild(mr);
+  }
 }
 
 /* ─── CHARACTER POSITION ────────────── */
@@ -825,7 +827,7 @@ function runPracticeQ() {
   document.getElementById('p-complete').style.display='none';
   const btn=document.getElementById('p-btn');
   btn.style.display=''; btn.textContent=gChar+' ジャンプ！'; btn.disabled=false; btn.onclick=practiceJump;
-  buildTrack('p-track',true);
+  buildTrack('p-track',true,true);
   afterLayout(()=>placeChar('p-char','p-track'));
 }
 
@@ -1154,7 +1156,7 @@ function openSealModal(seal, isRare) {
   const emojis = ['✨','⭐','💫','🌟','✨','💫','⭐','🌟','✨','⭐','💫','🌟'];
   for (let i = 0; i < 12; i++) {
     const angle  = (i / 12) * Math.PI * 2;
-    const radius = 100 + (i % 3) * 12;          // 少しバラつかせる
+    const radius = 155 + (i % 3) * 18;          // 少しバラつかせる
     const sp = document.createElement('div');
     sp.className = 'modal-sparkle';
     sp.textContent = emojis[i];
